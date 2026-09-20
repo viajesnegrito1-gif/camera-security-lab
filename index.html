@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Exploit Lab - WebRTC Test</title>
+
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: #020702;
+    color: #00ff41;
+    font-family: "Courier New", monospace;
+    min-height: 100vh;
+    padding: 25px;
+  }
+
+  .terminal {
+    max-width: 850px;
+    margin: auto;
+    border: 1px solid #00ff41;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 0 25px rgba(0,255,65,.25);
+  }
+
+  .barra {
+    background: #071207;
+    padding: 12px;
+    border-bottom: 1px solid #00ff41;
+  }
+
+  .contenido {
+    padding: 25px;
+  }
+
+  h1 {
+    margin-top: 0;
+    text-shadow: 0 0 8px #00ff41;
+  }
+
+  .warning {
+    color: #ffe600;
+    border: 1px solid #ffe600;
+    padding: 12px;
+    margin: 20px 0;
+  }
+
+  #log {
+    min-height: 180px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+  }
+
+  button {
+    background: transparent;
+    color: #00ff41;
+    border: 1px solid #00ff41;
+    padding: 14px 22px;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #00ff41;
+    color: black;
+  }
+
+  video {
+    display: none;
+    width: 100%;
+    margin-top: 25px;
+    border: 1px solid #00ff41;
+    border-radius: 5px;
+  }
+
+  .cursor {
+    animation: blink 1s infinite;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+</style>
+</head>
+
+<body>
+
+<div class="terminal">
+
+  <div class="barra">
+    ETHICAL_SECURITY_LAB — WebRTC
+  </div>
+
+  <div class="contenido">
+
+    <h1>WEB EXPLOIT LAB</h1>
+
+    <p>Browser permission & WebRTC demonstration</p>
+
+    <div class="warning">
+      ⚠ LABORATORIO: esta demostración solicitará
+      explícitamente permiso para utilizar la cámara.
+    </div>
+
+    <div id="log">
+      > Inicializando laboratorio...<br>
+      > WebRTC module loaded.<br>
+      > Camera access: NOT AUTHORIZED<br>
+      > Esperando ejecución...<span class="cursor">█</span>
+    </div>
+
+    <button id="iniciar">
+      [ EJECUTAR PRUEBA ]
+    </button>
+
+    <video id="video"
+           autoplay
+           playsinline
+           muted>
+    </video>
+
+  </div>
+</div>
+
+<script>
+
+const boton = document.getElementById("iniciar");
+const video = document.getElementById("video");
+const log = document.getElementById("log");
+
+function mensaje(texto) {
+  log.innerHTML += "<br>> " + texto;
+}
+
+boton.addEventListener("click", async () => {
+
+  boton.disabled = true;
+
+  mensaje("[SCAN] Comprobando MediaDevices...");
+  await esperar(700);
+
+  mensaje("[WEBRTC] getUserMedia disponible.");
+  await esperar(700);
+
+  mensaje("[PERMISSION] Solicitando permiso de cámara...");
+
+  try {
+
+    const stream =
+      await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
+
+    mensaje("[SUCCESS] Permiso concedido.");
+    mensaje("[CAMERA] Stream iniciado.");
+    mensaje("[STATUS] Laboratorio ejecutándose.");
+
+    video.srcObject = stream;
+    video.style.display = "block";
+
+  } catch (error) {
+
+    mensaje("[DENIED] Cámara no autorizada.");
+    mensaje("[STATUS] Prueba finalizada.");
+
+    boton.disabled = false;
+
+    console.error(error);
+  }
+
+});
+
+function esperar(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+</script>
+
+</body>
+</html>
