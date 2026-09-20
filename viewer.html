@@ -1,68 +1,264 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prueba WebRTC</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Visor WebRTC</title>
 
-  <style>
-    body {
-      background: #111;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 30px;
-    }
+<style>
+body {
+    font-family: -apple-system, sans-serif;
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+}
 
-    video {
-      width: 100%;
-      max-width: 600px;
-      margin-top: 20px;
-      border-radius: 15px;
-      background: black;
-    }
+video {
+    width: 100%;
+    background: #000;
+    border-radius: 15px;
+}
 
-    button {
-      padding: 15px 25px;
-      font-size: 18px;
-      cursor: pointer;
-      border-radius: 10px;
-    }
-  </style>
+textarea {
+    width: 100%;
+    height: 140px;
+    margin: 10px 0;
+}
+
+button {
+    padding: 12px 18px;
+    margin: 5px;
+    font-size: 16px;
+}
+
+#fotos img {
+    width: 150px;
+    margin: 5px;
+    border-radius: 8px;
+}
+
+#estado {
+    padding: 10px;
+    background: #eee;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+</style>
 </head>
 
 <body>
 
-  <h1>Laboratorio WebRTC</h1>
-  <p>La cámara solo se activa después de conceder permiso.</p>
+<h2>💻 Visor WebRTC</h2>
 
-  <button id="iniciar">ACTIVAR CÁMARA</button>
+<div id="estado">
+Esperando conexión
+</div>
 
-  <br>
+<h3>1. Código del iPhone</h3>
 
-  <video id="video" autoplay playsinline muted></video>
+<textarea
+id="oferta"
+placeholder="Pega aquí el código generado por el iPhone">
+</textarea>
 
-  <script>
-    const boton = document.getElementById("iniciar");
-    const video = document.getElementById("video");
+<button id="generar">
+Conectar
+</button>
 
-    boton.addEventListener("click", async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "environment"
-          },
-          audio: false
+<h3>2. Código para devolver al iPhone</h3>
+
+<textarea
+id="respuesta"
+readonly>
+</textarea>
+
+<h3>Video en directo</h3>
+
+<video
+id="remoto"
+autoplay
+playsinline>
+</video>
+
+<br>
+
+<button id="capturar" disabled>
+📷 Capturar imagen
+</button>
+
+<span id="contador">
+0 / 10
+</span>
+
+<div id="fotos"></div>
+
+<canvas id="canvas" style="display:none"></canvas>
+
+<script>
+
+const oferta =
+document.getElementById("oferta");
+
+const respuesta =
+document.getElementById("respuesta");
+
+const generar =
+document.getElementById("generar");
+
+const remoto =
+document.getElementById("remoto");
+
+const estado =
+document.getElementById("estado");
+
+const capturar =
+document.getElementById("capturar");
+
+const contador =
+document.getElementById("contador");
+
+const fotos =
+document.getElementById("fotos");
+
+const canvas =
+document.getElementById("canvas");
+
+let pc;
+let cantidad = 0;
+
+
+// CONECTAR CON IPHONE
+
+generar.onclick = async () => {
+
+    try {
+
+        pc = new RTCPeerConnection({
+            iceServers:[
+                {
+                    urls:
+                    "stun:stun.l.google.com:19302"
+                }
+            ]
         });
 
-        video.srcObject = stream;
 
-      } catch (error) {
-        alert("No se pudo acceder a la cámara. Revisa los permisos.");
+        pc.ontrack = event => {
+
+            remoto.srcObject =
+                event.streams[0];
+
+            estado.textContent =
+                "🟢 iPhone conectado";
+
+            capturar.disabled = false;
+
+        };
+
+
+        const offer =
+            JSON.parse(oferta.value);
+
+
+        await pc.setRemoteDescription(
+            offer
+        );
+
+
+        const answer =
+            await pc.createAnswer();
+
+
+        await pc.setLocalDescription(
+            answer
+        );
+
+
+        pc.onicecandidate = event => {
+
+            if(event.candidate === null){
+
+                respuesta.value =
+                    JSON.stringify(
+                        pc.localDescription
+                    );
+
+            }
+
+        };
+
+    }
+
+    catch(error){
+
         console.error(error);
-      }
-    });
-  </script>
+
+        alert(
+            "El código del iPhone no es válido."
+        );
+
+    }
+
+};
+
+
+// CAPTURA LOCAL DESDE EL VIDEO RECIBIDO
+
+capturar.onclick = () => {
+
+    if(cantidad >= 10)
+        return;
+
+
+    canvas.width =
+        remoto.videoWidth;
+
+    canvas.height =
+        remoto.videoHeight;
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    ctx.drawImage(
+        remoto,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    const img =
+        document.createElement("img");
+
+
+    img.src =
+        canvas.toDataURL(
+            "image/jpeg",
+            0.9
+        );
+
+
+    fotos.appendChild(img);
+
+
+    cantidad++;
+
+    contador.textContent =
+        cantidad + " / 10";
+
+
+    if(cantidad >= 10){
+
+        capturar.disabled = true;
+
+    }
+
+};
+
+</script>
 
 </body>
 </html>
