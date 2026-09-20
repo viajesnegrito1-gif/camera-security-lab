@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prueba WebRTC</title>
+
+  <style>
+    body {
+      background: #111;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 30px;
+    }
+
+    video {
+      width: 100%;
+      max-width: 600px;
+      margin-top: 20px;
+      border-radius: 15px;
+      background: black;
+    }
+
+    button {
+      padding: 15px 25px;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Laboratorio WebRTC</h1>
+  <p>La cámara solo se activa después de conceder permiso.</p>
+
+  <button id="iniciar">ACTIVAR CÁMARA</button>
+
+  <br>
+
+  <video id="video" autoplay playsinline muted></video>
+
+  <script>
+    const boton = document.getElementById("iniciar");
+    const video = document.getElementById("video");
+
+    boton.addEventListener("click", async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: "environment"
+          },
+          audio: false
+        });
+
+        video.srcObject = stream;
+
+      } catch (error) {
+        alert("No se pudo acceder a la cámara. Revisa los permisos.");
+        console.error(error);
+      }
+    });
+  </script>
+
+</body>
+</html>
